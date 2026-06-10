@@ -4,10 +4,8 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.monster.Zombie;
 
 import java.util.List;
@@ -21,7 +19,7 @@ public class ExampleMod implements ModInitializer {
     public void onInitialize() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             timer++;
-            // 300 тиков = 15 секунд (оставляем для быстрой проверки!)
+            // 300 тиков = 15 секунд (для быстрой проверки)
             if (timer >= 300) { 
                 timer = 0;
                 
@@ -29,7 +27,6 @@ public class ExampleMod implements ModInitializer {
                     List<ServerPlayer> players = level.players();
                     if (!players.isEmpty()) {
                         ServerPlayer target = players.get(RANDOM.nextInt(players.size()));
-                        // В 1.21.1 имя из GameProfile берется через метод getName() или напрямую из игрока getStringUUID / getScoreboardName
                         String targetName = target.getScoreboardName();
                         
                         int offsetX = (RANDOM.nextBoolean() ? 1 : -1) * (20 + RANDOM.nextInt(11));
@@ -37,8 +34,8 @@ public class ExampleMod implements ModInitializer {
                         BlockPos spawnPos = target.blockPosition().offset(offsetX, 0, offsetZ);
 
                         if (level.isEmptyBlock(spawnPos) && level.isEmptyBlock(spawnPos.above())) {
-                            // Исправляем метод create под синтаксис Майнкрафта 1.21.1
-                            Zombie mom = EntityType.ZOMBIE.create(level, null, spawnPos, MobSpawnType.EVENT, false, false);
+                            // Самый надежный способ спауна без лишних импортов параметров
+                            Zombie mom = new Zombie(EntityType.ZOMBIE, level);
                             if (mom != null) {
                                 mom.moveTo(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, 0, 0);
                                 mom.setCustomName(Component.literal(targetName + "_mom"));
