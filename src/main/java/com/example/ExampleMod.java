@@ -14,10 +14,8 @@ public class ExampleMod implements ModInitializer {
     public void onInitialize() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             timer++;
-            // 300 тиков = 15 секунд (для быстрой проверки)
-            if (timer >= 300) { 
+            if (timer >= 300) { // 15 секунд для проверки
                 timer = 0;
-                
                 if (server != null) {
                     server.getAllLevels().forEach(level -> {
                         List<ServerPlayer> players = level.players();
