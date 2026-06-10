@@ -4,9 +4,12 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.monster.Zombie;
+
 import java.util.List;
 import java.util.Random;
 
@@ -16,34 +19,32 @@ public class ExampleMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        // Логика тиков сервера напрямую из Java-кода мода
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             timer++;
-            // 300 тиков = 15 секунд (специально для быстрой проверки!)
+            // 300 тиков = 15 секунд (оставляем для быстрой проверки!)
             if (timer >= 300) { 
                 timer = 0;
                 
                 server.getAllLevels().forEach(level -> {
                     List<ServerPlayer> players = level.players();
                     if (!players.isEmpty()) {
-                        // Выбираем случайного игрока в мире
                         ServerPlayer target = players.get(RANDOM.nextInt(players.size()));
-                        String targetName = target.getGameProfile().getName();
+                        // В 1.21.1 имя из GameProfile берется через метод getName() или напрямую из игрока getStringUUID / getScoreboardName
+                        String targetName = target.getScoreboardName();
                         
-                        // Координаты неподалеку (в радиусе 20-30 блоков)
                         int offsetX = (RANDOM.nextBoolean() ? 1 : -1) * (20 + RANDOM.nextInt(11));
                         int offsetZ = (RANDOM.nextBoolean() ? 1 : -1) * (20 + RANDOM.nextInt(11));
                         BlockPos spawnPos = target.blockPosition().offset(offsetX, 0, offsetZ);
 
                         if (level.isEmptyBlock(spawnPos) && level.isEmptyBlock(spawnPos.above())) {
-                            Zombie mom = EntityType.ZOMBIE.create(level);
+                            // Исправляем метод create под синтаксис Майнкрафта 1.21.1
+                            Zombie mom = EntityType.ZOMBIE.create(level, null, spawnPos, MobSpawnType.EVENT, false, false);
                             if (mom != null) {
                                 mom.moveTo(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, 0, 0);
                                 mom.setCustomName(Component.literal(targetName + "_mom"));
                                 mom.setCustomNameVisible(true);
                                 level.addFreshEntity(mom);
                                 
-                                // Системное сообщение желтым цветом в чат
                                 server.getPlayerList().broadcastSystemMessage(
                                     Component.literal("§e" + targetName + "_mom joined the game"), false
                                 );
