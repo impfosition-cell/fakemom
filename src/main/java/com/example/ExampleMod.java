@@ -22,11 +22,9 @@ public class ExampleMod implements ModInitializer {
                     server.getAllLevels().forEach(level -> {
                         List<ServerPlayer> players = level.players();
                         if (!players.isEmpty()) {
-                            // Выбираем случайного игрока
                             ServerPlayer target = players.get(RANDOM.nextInt(players.size()));
                             String targetName = target.getScoreboardName();
                             
-                            // Генерируем случайное смещение координат вокруг игрока
                             int offsetX = (RANDOM.nextBoolean() ? 1 : -1) * (20 + RANDOM.nextInt(11));
                             int offsetZ = (RANDOM.nextBoolean() ? 1 : -1) * (20 + RANDOM.nextInt(11));
                             
@@ -34,19 +32,16 @@ public class ExampleMod implements ModInitializer {
                             double y = target.getY();
                             double z = target.getZ() + offsetZ;
 
-                            // Заставляем сервер принудительно выполнить команду спауна зомби с кастомным именем
                             String summonCmd = String.format(
                                 "execute at %s run summon zombie %.2f %.2f %.2f {CustomNameVisible:1b,Attributes:[{Name:\"generic.max_health\",Base:20.0},{Name:\"generic.movement_speed\",Base:0.3}],CustomName:'{\"text\":\"%s_mom\"}'}",
                                 targetName, x, y, z, targetName
                             );
                             
-                            // Заставляем сервер принудительно написать жёлтый текст в чат
                             String msgCmd = String.format(
                                 "tellraw @a {\"text\":\"\",\"extra\":[{\"text\":\"%s_mom joined the game\",\"color\":\"yellow\"}]}",
                                 targetName
                             );
 
-                            // Выполняем обе команды от имени сервера
                             server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), summonCmd);
                             server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), msgCmd);
                         }
