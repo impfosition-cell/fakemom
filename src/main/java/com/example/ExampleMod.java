@@ -5,8 +5,8 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.monster.Zombie;
 
 import java.util.List;
 import java.util.Random;
@@ -34,8 +34,8 @@ public class ExampleMod implements ModInitializer {
                         BlockPos spawnPos = target.blockPosition().offset(offsetX, 0, offsetZ);
 
                         if (level.isEmptyBlock(spawnPos) && level.isEmptyBlock(spawnPos.above())) {
-                            // Самый надежный способ спауна без лишних импортов параметров
-                            Zombie mom = new Zombie(EntityType.ZOMBIE, level);
+                            // Спауним через базовый класс Entity и встроенный метод, без упоминания слова Zombie!
+                            Entity mom = EntityType.ZOMBIE.create(level);
                             if (mom != null) {
                                 mom.moveTo(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, 0, 0);
                                 mom.setCustomName(Component.literal(targetName + "_mom"));
