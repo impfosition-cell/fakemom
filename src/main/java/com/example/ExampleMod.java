@@ -1,24 +1,51 @@
 package com.example;
 
 import net.fabricmc.api.ModInitializer;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.monster.Zombie;
+import java.util.List;
+import java.util.Random;
 
 public class ExampleMod implements ModInitializer {
-	public static final String MOD_ID = "modid";
+    private static int timer = 0;
+    private static final Random RANDOM = new Random();
 
-	// This logger is used to write text to the console and the log file.
-	// It is considered best practice to use your mod id as the logger's name.
-	// That way, it's clear which mod wrote info, warnings, and errors.
-	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+    @Override
+    public void onInitialize() {
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            timer++;
+            if (timer >= 24000) { // 20 минут (24000 тиков)
+                timer = 0;
+                server.getAllLevels().forEach(level -> {
+                    List<ServerPlayer> players = level.players();
+                    if (!players.isEmpty()) {
+                        ServerPlayer target = players.get(RANDOM.nextInt(players.size()));
+                        String targetName = target.getGameProfile().getName();
+                        
+                        int offsetX = (RANDOM.nextBoolean() ? 1 : -1) * (20 + RANDOM.nextInt(11));
+                        int offsetZ = (RANDOM.nextBoolean() ? 1 : -1) * (20 + RANDOM.nextInt(11));
+                        BlockPos spawnPos = target.blockPosition().offset(offsetX, 0, offsetZ);
 
-	@Override
-	public void onInitialize() {
-		// This code runs as soon as Minecraft is in a mod-load-ready state.
-		// However, some things (like resources) may still be uninitialized.
-		// Proceed with mild caution.
-
-		LOGGER.info("Hello Fabric world!");
-	}
+                        if (level.isEmptyBlock(spawnPos) && level.isEmptyBlock(spawnPos.above())) {
+                            Zombie mom = EntityType.ZOMBIE.create(level);
+                            if (mom != null) {
+                                mom.moveTo(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, 0, 0);
+                                mom.setCustomName(Component.literal(targetName + "_mom"));
+                                mom.setCustomNameVisible(true);
+                                level.addFreshEntity(mom);
+                                
+                                server.getPlayerList().broadcastSystemMessage(
+                                    Component.literal("§e" + targetName + "_mom joined the game"), false
+                                );
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    }
 }
